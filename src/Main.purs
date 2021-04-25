@@ -15,6 +15,8 @@ import Effect (Effect)
 import Effect.Console (log)
 import Node.Encoding (Encoding(..))
 import Node.FS.Sync (readTextFile)
+import Node.Stream (onFinish)
+import Data.Tuple
 
 main :: Effect Unit
 main = do
@@ -77,6 +79,22 @@ cancelMaybe :: Maybe Char -> Char
 cancelMaybe Nothing = '*' --this will never happen
 
 cancelMaybe (Just pub) = pub
+
+indexor40001 :: NonEmptyArray (NonEmptyArray Char) -> Char -> Int -> List (Tuple Int Int) -> List (Tuple Int Int)
+indexor40001 pubs pub i acc =
+  let
+    a = index pubs i
+  in
+    case a of
+      Nothing -> acc
+      Just b ->
+        let
+          pubOnI = indexor30000 b pub 0 Nil
+        in
+          indexor40001 pubs pub (i + 1) (acc <> (map asd pubOnI))
+        where
+        asd :: Int -> Tuple Int Int
+        asd l = Tuple l i
 
 indexor30000 :: NonEmptyArray Char -> Char -> Int -> List Int -> List Int
 indexor30000 pubs pub i acc =
