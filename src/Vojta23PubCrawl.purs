@@ -2,7 +2,7 @@ module Main where
 
 import Prelude
 import Data.Array (foldl)
-import Data.Array.NonEmpty (NonEmptyArray, index, length)
+import Data.Array.NonEmpty (NonEmptyArray, index)
 import Data.Foldable (minimum)
 import Data.List (List(..), fromFoldable, null)
 import Data.Maybe (Maybe(..))
@@ -73,36 +73,31 @@ solve sum currentPos pubs (Cons first rest) =
     in
       solve (sum + distance) pos pubs rest <> acc
 
-cancelMaybe :: Maybe Char -> Char
-cancelMaybe Nothing = '*' --this will never happen
-
-cancelMaybe (Just pub) = pub
-
 indexor30000 :: NonEmptyArray Char -> Char -> Int -> List Int -> List Int
 indexor30000 pubs pub i acc =
-  if i > (length pubs) then
-    acc
-  else
-    let
-      pubOnI = cancelMaybe (index pubs i)
-    in
-      if pub == pubOnI then
-        indexor30000 pubs pub (i + 1) (Cons i acc)
-      else
-        indexor30000 pubs pub (i + 1) (acc)
+  let
+    b = index pubs i
+  in
+    case b of
+      Nothing -> acc
+      Just pubOnI ->
+        if pub == pubOnI then
+          indexor30000 pubs pub (i + 1) (Cons i acc)
+        else
+          indexor30000 pubs pub (i + 1) (acc)
 
 convertStringToListOfChars :: String -> List Char
 convertStringToListOfChars str = fromFoldable $ toCharArray str --credits to Omar Mefire
 
--- ################################################################################
+-- #########################################################################
 -- Call for all distances
 getAllDistances :: Maybe (List Int)
 getAllDistances = do
-  nEPubs <- fromString "AABACADAA"
+  nEPubs <- fromString "ABCB"
   let
     pubs = toNonEmptyCharArray nEPubs
   let
-    beers = convertStringToListOfChars "ABACAA"
+    beers = convertStringToListOfChars "ABC"
   solveInterface pubs beers
 
 -- Call for the shortest distance
