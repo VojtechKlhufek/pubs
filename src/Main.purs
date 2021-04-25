@@ -1,10 +1,13 @@
 module Main where
 
+import Data.Tuple
+import Math
 import Prelude
 import Data.Array (foldl)
-import Data.Array.NonEmpty (NonEmptyArray, index, length)
+import Data.Array.NonEmpty (NonEmptyArray, fromArray, index, length)
 import Data.Foldable (minimum)
-import Data.List (List(..), fromFoldable, null)
+import Data.Int (pow, toNumber)
+import Data.List (List(..), fromFoldable, null, head)
 import Data.Maybe (Maybe(..))
 import Data.Ord (abs)
 import Data.String (Pattern(..), split)
@@ -16,7 +19,6 @@ import Effect.Console (log)
 import Node.Encoding (Encoding(..))
 import Node.FS.Sync (readTextFile)
 import Node.Stream (onFinish)
-import Data.Tuple
 
 main :: Effect Unit
 main = do
@@ -47,33 +49,33 @@ solve vrátí
 - Nothing pokud nemůžeme daná piva vypít
 - (Just l) pokud je můžeme vypít na nějaké cestě délky l
  -}
-solveInterface :: NonEmptyArray Char -> List Char -> Maybe (List Int)
+solveInterface :: NonEmptyArray (NonEmptyArray Char) -> List Char -> Maybe (List Number)
 solveInterface p b =
   let
-    solution = solve 0 0 p b
+    solution = solve (toNumber 0) (Tuple 0 0) p b
   in
     if null solution then
       Nothing
     else
       Just solution
 
-solve :: Int -> Int -> NonEmptyArray Char -> List Char -> List Int
+solve :: Number -> Tuple Int Int -> NonEmptyArray (NonEmptyArray Char) -> List Char -> List Number
 solve sum _ _ Nil = Cons sum Nil
 
 solve sum currentPos pubs (Cons first rest) =
   let
-    nextPos = indexor30000 pubs first 0 Nil
+    nextPos = indexor40001 pubs first 0 Nil
   in
     if null nextPos then
       Nil
     else
       foldl go Nil nextPos
   where
-  go acc pos =
+  go acc x =
     let
-      distance = abs (pos - currentPos)
+      distance = sqrt (toNumber (pow (fst x - fst currentPos) 2 + pow (snd x - snd currentPos) 2))
     in
-      solve (sum + distance) pos pubs rest <> acc
+      solve (sum + distance) x pubs rest <> acc
 
 cancelMaybe :: Maybe Char -> Char
 cancelMaybe Nothing = '*' --this will never happen
@@ -98,33 +100,34 @@ indexor40001 pubs pub i acc =
 
 indexor30000 :: NonEmptyArray Char -> Char -> Int -> List Int -> List Int
 indexor30000 pubs pub i acc =
-  if i > (length pubs) then
-    acc
-  else
-    let
-      pubOnI = cancelMaybe (index pubs i)
-    in
-      if pub == pubOnI then
-        indexor30000 pubs pub (i + 1) (Cons i acc)
-      else
-        indexor30000 pubs pub (i + 1) (acc)
+  let
+    b = index pubs i
+  in
+    case b of
+      Nothing -> acc
+      Just pubOnI ->
+        if pub == pubOnI then
+          indexor30000 pubs pub (i + 1) (Cons i acc)
+        else
+          indexor30000 pubs pub (i + 1) (acc)
 
 convertStringToListOfChars :: String -> List Char
 convertStringToListOfChars str = fromFoldable $ toCharArray str --credits to Omar Mefire
 
 -- ################################################################################
 -- Call for all distances
-getAllDistances :: Maybe (List Int)
+getAllDistances :: Maybe (List Number)
 getAllDistances = do
-  nEPubs <- fromString "AABACADAA"
+  nEPubs1 <- fromString "ABC"
+  nEPubs2 <- fromString "BCA"
+  nEPubs3 <- fromString "CAB"
+  pubs <- fromArray ([ toNonEmptyCharArray nEPubs1, toNonEmptyCharArray nEPubs2, toNonEmptyCharArray nEPubs3 ])
   let
-    pubs = toNonEmptyCharArray nEPubs
-  let
-    beers = convertStringToListOfChars "ABACAA"
+    beers = convertStringToListOfChars "AC"
   solveInterface pubs beers
 
 -- Call for the shortest distance
-getShortestDistance :: Maybe Int
+getShortestDistance :: Maybe Number
 getShortestDistance = case getAllDistances of
   Nothing -> Nothing
   Just a -> minimum a
