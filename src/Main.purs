@@ -94,7 +94,7 @@ indexor30000 pubs pub i acc =
 convertStringToListOfChars :: String -> List Char
 convertStringToListOfChars str = fromFoldable $ toCharArray str --credits to Omar Mefire
 
--- #########################################################################
+-- #######################################################################
 -- Call for all distances
 getAllDistances :: Maybe (List Int)
 getAllDistances = do
